@@ -4,7 +4,7 @@ A production-style static website hosted on **Amazon S3** (private bucket) and s
 
 ---
 
-## 🚀 Architecture
+## Architecture
 - **Amazon S3 (private bucket)** → stores static files (`index.html`).
 - **Amazon CloudFront** → provides global CDN caching, HTTPS, and secure access to the S3 bucket via OAC.
 - **GitHub Actions** → CI/CD pipeline that:
@@ -14,16 +14,47 @@ A production-style static website hosted on **Amazon S3** (private bucket) and s
   4. Invalidates CloudFront cache to show changes immediately
 
 **Live site:**  
-👉 [https://d1euoscys9m5d1.cloudfront.net/](https://d1euoscys9m5d1.cloudfront.net/)
+ [https://d1euoscys9m5d1.cloudfront.net/](https://d1euoscys9m5d1.cloudfront.net/)
 
 ---
 
-## 📂 Project Structure
+## CI/CD Workflow
+Located in `.github/workflows/deploy.yml`.
 
-aws-static-sitev1/
-├─ src/                  # website source files
-│  └─ index.html
-├─ .github/workflows/    # GitHub Actions CI/CD pipeline
-│  └─ deploy.yml
-└─ README.md
+Triggered on **push to `main`**, the workflow:
+
+- Checkout code
+- Configure AWS credentials
+- Sync `src/` to S3 bucket
+- Invalidate CloudFront distribution
+
+--- 
+
+## Minimal IAM policy
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "BucketMeta",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket", "s3:GetBucketLocation"],
+      "Resource": "arn:aws:s3:::soni-static-websitev1-202509"
+    },
+    {
+      "Sid": "ObjectRW",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::soni-static-websitev1-202509/*"
+    },
+    {
+      "Sid": "CFInvalidate",
+      "Effect": "Allow",
+      "Action": ["cloudfront:CreateInvalidation"],
+      "Resource": "*"
+    }
+  ]
+}
+
+
 

@@ -1,30 +1,41 @@
-name: Deploy static site to S3 + CloudFront
+name: Deploy static site to S3 + CloudFront (TF)
 
 on:
   push:
-    branches: [ "main" ]   # run when you push to main
+    branches: ["main"]
+
+env:
+  BUCKET_NAME: soni-static-site-tf # <-- set to your TF output: `terraform output -raw bucket_name`
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest   # the "server" GitHub gives us to run steps
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4   # pulls your repo into the runner
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }} # us-east-1
 
+      # Upload everything in src/
       - name: Sync to S3
         run: |
-          aws s3 sync src/ s3://soni-static-websitev1-202509 --delete
+          aws s3 sync src/ s3://$BUCKET_NAME --delete
 
+      # Ensure index.html refreshes quickly
+      - name: Set cache headers for index.html
+        run: |
+          aws s3 cp src/index.html s3://$BUCKET_NAME/index.html \
+            --content-type text/html \
+            --cache-control "max-age=60,public"
+
+      # Invalidate only the HTML (faster than /*)
       - name: Invalidate CloudFront cache
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id E1DO192AYSVLCG \
-            --paths "/*"
-
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_TF }} \
+            --paths "/index.html"

@@ -1,7 +1,29 @@
-/.DS_Store
-/node_modules/
-infra/.terraform/
+# ---------------------
+# Terraform
+# ---------------------
+# Terraform
+.terraform/
 *.tfstate
 *.tfstate.backup
-*.zip
-.env
+.terraform.lock.hcl
+
+# Crash log files
+crash.log
+
+# Ignore terraform lock file (re-generated on init)
+.terraform.lock.hcl
+
+# ---------------------
+# OS / Editor Junk
+# ---------------------
+.DS_Store
+Thumbs.db
+
+# VS Code settings (optional)
+.vscode/
+
+# ---------------------
+# Node / Python (if you add frontend/backend later)
+# ---------------------
+node_modules/
+__pycache__/

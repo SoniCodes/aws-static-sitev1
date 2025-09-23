@@ -1,60 +1,28 @@
-# AWS Static Website — S3 + CloudFront + GitHub Actions CI/CD
+# AWS Static Site (Manual + Terraform + CI/CD)
 
-A production-style static website hosted on **Amazon S3** (private bucket) and served globally through **Amazon CloudFront** with Origin Access Control (OAC). Deployment is fully automated using **GitHub Actions**.
+## Overview
+This project demonstrates deploying a static website on AWS.  
+I first created the deployment manually using the AWS Console (S3 + CloudFront), and then rebuilt the same project using Terraform for Infrastructure as Code (IaC).  
 
----
+CI/CD is implemented with GitHub Actions: every push to `main` syncs files to the S3 bucket and invalidates CloudFront cache.
 
-## Architecture
-- **Amazon S3 (private bucket)** → stores static files (`index.html`).
-- **Amazon CloudFront** → provides global CDN caching, HTTPS, and secure access to the S3 bucket via OAC.
-- **GitHub Actions** → CI/CD pipeline that:
-  1. Checks out repo
-  2. Configures AWS credentials (via GitHub Secrets)
-  3. Syncs files to S3
-  4. Invalidates CloudFront cache to show changes immediately
+## Tech Stack
+- **AWS S3** – static site bucket (private, CloudFront-only access)
+- **AWS CloudFront** – CDN, HTTPS, caching
+- **Terraform** – infrastructure as code (infra/ folder)
+- **GitHub Actions** – CI/CD pipeline (`.github/workflows/deploy.yml`)
+- **IAM** – least-privilege user for deploys
 
-**Live site:**  
- [https://d1euoscys9m5d1.cloudfront.net/](https://d1euoscys9m5d1.cloudfront.net/)
+## Live Site
+[CloudFront URL](https://[YOUR_CF_URL_HERE](https://d8js3zbzg9e1p.cloudfront.net/))
 
----
-
-## CI/CD Workflow
-Located in `.github/workflows/deploy.yml`.
-
-Triggered on **push to `main`**, the workflow:
-
-- Checkout code
-- Configure AWS credentials
-- Sync `src/` to S3 bucket
-- Invalidate CloudFront distribution
-
---- 
-
-## Minimal IAM policy
-
+## IAM Policy (least privilege for CI/CD user)
+```json
 {
   "Version": "2012-10-17",
   "Statement": [
-    {
-      "Sid": "BucketMeta",
-      "Effect": "Allow",
-      "Action": ["s3:ListBucket", "s3:GetBucketLocation"],
-      "Resource": "arn:aws:s3:::soni-static-websitev1-202509"
-    },
-    {
-      "Sid": "ObjectRW",
-      "Effect": "Allow",
-      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
-      "Resource": "arn:aws:s3:::soni-static-websitev1-202509/*"
-    },
-    {
-      "Sid": "CFInvalidate",
-      "Effect": "Allow",
-      "Action": ["cloudfront:CreateInvalidation"],
-      "Resource": "*"
-    }
+    { "Sid":"BucketMeta","Effect":"Allow","Action":["s3:ListBucket","s3:GetBucketLocation"],"Resource":"arn:aws:s3:::soni-static-site-tf" },
+    { "Sid":"ObjectRW","Effect":"Allow","Action":["s3:GetObject","s3:PutObject","s3:DeleteObject"],"Resource":"arn:aws:s3:::soni-static-site-tf/*" },
+    { "Sid":"CFInvalidate","Effect":"Allow","Action":["cloudfront:CreateInvalidation"],"Resource":"*" }
   ]
 }
-
-
-

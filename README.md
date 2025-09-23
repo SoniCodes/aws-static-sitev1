@@ -14,7 +14,7 @@ CI/CD is implemented with GitHub Actions: every push to `main` syncs files to th
 - **IAM** – least-privilege user for deploys
 
 ## Live Site
-[CloudFront URL](https://[YOUR_CF_URL_HERE](https://d8js3zbzg9e1p.cloudfront.net/))
+[CloudFront URL](https://d8js3zbzg9e1p.cloudfront.net/)
 
 ## IAM Policy (least privilege for CI/CD user)
 ```json
